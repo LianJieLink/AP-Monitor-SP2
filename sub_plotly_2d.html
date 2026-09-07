@@ -1,0 +1,217 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Impact Area Monitor</title>
+    <style>
+        :root { --accent: #00f3ff; --bg: #050505; --panel: #111; --text: #eee; --border: #333; }
+        body, html { margin: 0; padding: 0; height: 100vh; width: 100vw; overflow: hidden; background: var(--bg); font-family: 'Segoe UI', sans-serif; }
+        .layout-wrapper { display: flex; flex-direction: column; height: 100vh; width: 100vw; }
+        .chart-container { flex: 1; position: relative; overflow: hidden; background: #000; }
+        .chart-container > div { width: 100% !important; height: 100% !important; }
+        
+        .bottom-panel { 
+            height: 80px; background: var(--panel); border-top: 1px solid var(--border); 
+            display: flex; align-items: center; padding: 0 30px; gap: 20px; 
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.8);
+            position: relative;
+        }
+        
+        .bottom-panel::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100px; height: 2px; background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .play-section { flex: 0 0 140px; }
+        .slider-section { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        
+        .time-box { 
+            flex: 0 0 180px; text-align: right; 
+            background: #000; border: 1px solid var(--border); padding: 10px;
+            font-family: 'Consolas', monospace; color: var(--accent); font-size: 18px; font-weight: bold; 
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .time-box span { font-size: 10px; color: #666; }
+
+        .play-btn { 
+            width: 100%; padding: 10px; background: transparent; border: 1px solid var(--accent); 
+            color: var(--accent); font-family: 'Consolas', monospace; font-weight: bold; cursor: pointer; 
+            transition: 0.2s; text-transform: uppercase; letter-spacing: 2px;
+            position: relative; overflow: hidden;
+        }
+        .play-btn:hover { background: rgba(0, 243, 255, 0.1); box-shadow: 0 0 15px rgba(0, 243, 255, 0.2); }
+        .play-btn.paused { border-color: #ff3333; color: #ff3333; }
+        
+        input[type=range] { width: 100%; cursor: pointer; accent-color: var(--accent); height: 4px; background: #333; appearance: none; }
+        input[type=range]::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; background: var(--accent); border-radius: 0; box-shadow: 0 0 10px var(--accent); }
+        
+        .label { color: #666; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; font-family: 'Consolas', monospace; }
+        
+        .chart-container .legend-bar {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 40px;
+            width: auto !important; height: auto !important; 
+            background: rgba(10, 10, 10, 0.9);
+            padding: 10px 40px;
+            border: 1px solid #333; border-top: 2px solid var(--accent);
+            border-radius: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        .legend-item { display: flex; align-items: center; cursor: default; transition: 0.2s; }
+        .legend-item:hover { transform: translateY(-2px); }
+        .legend-label { color: #fff; font-size: 12px; font-weight: bold; letter-spacing: 1px; font-family: 'Consolas', monospace; text-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .sym { width: 24px; height: 24px; margin-right: 12px; display: flex; align-items: center; justify-content: center; }
+        .sym-impact { background: rgba(255, 0, 0, 0.2); border: 2px solid #ff0000; width: 16px; height: 16px; box-shadow: 0 0 10px rgba(255,0,0,0.3); }
+        .sym-trace { width: 8px; height: 8px; background: #ff0000; border-radius: 50%; box-shadow: 0 0 8px #ff0000; }
+        .sym-origin { width: 10px; height: 10px; background: #000; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 10px #fff; }
+
+    </style>
+</head>
+<body>
+    <div class="layout-wrapper">
+        <div class="chart-container">
+            <div>                        <script type="text/javascript">window.PlotlyConfig = {MathJaxConfig: 'local'};</script>
+        <script charset="utf-8" src="https://cdn.plot.ly/plotly-3.3.1.min.js" integrity="sha256-4rD3fugVb/nVJYUv5Ky3v+fYXoouHaBSP20WIJuEiWg=" crossorigin="anonymous"></script>                <div id="91c382bf-7ea1-42ec-bbec-c01b38569d9b" class="plotly-graph-div" style="height:100%; width:100%;"></div>            <script type="text/javascript">                window.PLOTLYENV=window.PLOTLYENV || {};                                if (document.getElementById("91c382bf-7ea1-42ec-bbec-c01b38569d9b")) {                    Plotly.newPlot(                        "91c382bf-7ea1-42ec-bbec-c01b38569d9b",                        [{"fill":"toself","fillcolor":"rgba(255, 0, 0, 0.2)","lat":[24.0001,23.9999,23.9999,24.0001],"line":{"color":"#ff0000","width":1},"lon":[120.5,120.5001,120.4999,120.5],"mode":"lines","name":"IMPACTED AREA","type":"scattermap"},{"lat":[24.0],"lon":[120.5],"marker":{"color":"#ff0000","opacity":0.9,"size":6},"mode":"markers","name":"TRACES","type":"scattermap"},{"hoverinfo":"text","hovertext":"Origin Point","lat":[24.0],"lon":[120.5],"marker":{"color":"black","size":10},"mode":"markers","name":"ORIGIN","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(0, 255, 255, 0.4)","hoverinfo":"skip","lat":[24.21847,24.218528,24.218798,24.218845,24.218845,24.21847,24.21847],"line":{"color":"#00FFFF","width":2},"lon":[120.617588,120.61748,120.61748,120.617588,120.618074,120.618074,120.617588],"marker":{"color":"#00FFFF","size":5},"mode":"lines+markers","name":"Target Zone 1","type":"scattermap"},{"fill":"toself","fillcolor":"rgba(0, 255, 255, 0.4)","hoverinfo":"skip","lat":[24.218247,24.218247,24.217954,24.217815,24.217815,24.217954,24.218247],"line":{"color":"#00FFFF","width":2},"lon":[120.619599,120.620373,120.620373,120.620262,120.61988,120.619599,120.619599],"marker":{"color":"#00FFFF","size":5},"mode":"lines+markers","name":"Target Zone 2","type":"scattermap"}],                        {"template":{"data":{"barpolar":[{"marker":{"line":{"color":"rgb(17,17,17)","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"barpolar"}],"bar":[{"error_x":{"color":"#f2f5fa"},"error_y":{"color":"#f2f5fa"},"marker":{"line":{"color":"rgb(17,17,17)","width":0.5},"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"bar"}],"carpet":[{"aaxis":{"endlinecolor":"#A2B1C6","gridcolor":"#506784","linecolor":"#506784","minorgridcolor":"#506784","startlinecolor":"#A2B1C6"},"baxis":{"endlinecolor":"#A2B1C6","gridcolor":"#506784","linecolor":"#506784","minorgridcolor":"#506784","startlinecolor":"#A2B1C6"},"type":"carpet"}],"choropleth":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"choropleth"}],"contourcarpet":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"contourcarpet"}],"contour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"contour"}],"heatmap":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"heatmap"}],"histogram2dcontour":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2dcontour"}],"histogram2d":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"histogram2d"}],"histogram":[{"marker":{"pattern":{"fillmode":"overlay","size":10,"solidity":0.2}},"type":"histogram"}],"mesh3d":[{"colorbar":{"outlinewidth":0,"ticks":""},"type":"mesh3d"}],"parcoords":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"parcoords"}],"pie":[{"automargin":true,"type":"pie"}],"scatter3d":[{"line":{"colorbar":{"outlinewidth":0,"ticks":""}},"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatter3d"}],"scattercarpet":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattercarpet"}],"scattergeo":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattergeo"}],"scattergl":[{"marker":{"line":{"color":"#283442"}},"type":"scattergl"}],"scattermapbox":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermapbox"}],"scattermap":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scattermap"}],"scatterpolargl":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolargl"}],"scatterpolar":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterpolar"}],"scatter":[{"marker":{"line":{"color":"#283442"}},"type":"scatter"}],"scatterternary":[{"marker":{"colorbar":{"outlinewidth":0,"ticks":""}},"type":"scatterternary"}],"surface":[{"colorbar":{"outlinewidth":0,"ticks":""},"colorscale":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"type":"surface"}],"table":[{"cells":{"fill":{"color":"#506784"},"line":{"color":"rgb(17,17,17)"}},"header":{"fill":{"color":"#2a3f5f"},"line":{"color":"rgb(17,17,17)"}},"type":"table"}]},"layout":{"annotationdefaults":{"arrowcolor":"#f2f5fa","arrowhead":0,"arrowwidth":1},"autotypenumbers":"strict","coloraxis":{"colorbar":{"outlinewidth":0,"ticks":""}},"colorscale":{"diverging":[[0,"#8e0152"],[0.1,"#c51b7d"],[0.2,"#de77ae"],[0.3,"#f1b6da"],[0.4,"#fde0ef"],[0.5,"#f7f7f7"],[0.6,"#e6f5d0"],[0.7,"#b8e186"],[0.8,"#7fbc41"],[0.9,"#4d9221"],[1,"#276419"]],"sequential":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]],"sequentialminus":[[0.0,"#0d0887"],[0.1111111111111111,"#46039f"],[0.2222222222222222,"#7201a8"],[0.3333333333333333,"#9c179e"],[0.4444444444444444,"#bd3786"],[0.5555555555555556,"#d8576b"],[0.6666666666666666,"#ed7953"],[0.7777777777777778,"#fb9f3a"],[0.8888888888888888,"#fdca26"],[1.0,"#f0f921"]]},"colorway":["#636efa","#EF553B","#00cc96","#ab63fa","#FFA15A","#19d3f3","#FF6692","#B6E880","#FF97FF","#FECB52"],"font":{"color":"#f2f5fa"},"geo":{"bgcolor":"rgb(17,17,17)","lakecolor":"rgb(17,17,17)","landcolor":"rgb(17,17,17)","showlakes":true,"showland":true,"subunitcolor":"#506784"},"hoverlabel":{"align":"left"},"hovermode":"closest","mapbox":{"style":"dark"},"paper_bgcolor":"rgb(17,17,17)","plot_bgcolor":"rgb(17,17,17)","polar":{"angularaxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""},"bgcolor":"rgb(17,17,17)","radialaxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""}},"scene":{"xaxis":{"backgroundcolor":"rgb(17,17,17)","gridcolor":"#506784","gridwidth":2,"linecolor":"#506784","showbackground":true,"ticks":"","zerolinecolor":"#C8D4E3"},"yaxis":{"backgroundcolor":"rgb(17,17,17)","gridcolor":"#506784","gridwidth":2,"linecolor":"#506784","showbackground":true,"ticks":"","zerolinecolor":"#C8D4E3"},"zaxis":{"backgroundcolor":"rgb(17,17,17)","gridcolor":"#506784","gridwidth":2,"linecolor":"#506784","showbackground":true,"ticks":"","zerolinecolor":"#C8D4E3"}},"shapedefaults":{"line":{"color":"#f2f5fa"}},"sliderdefaults":{"bgcolor":"#C8D4E3","bordercolor":"rgb(17,17,17)","borderwidth":1,"tickwidth":0},"ternary":{"aaxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""},"baxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""},"bgcolor":"rgb(17,17,17)","caxis":{"gridcolor":"#506784","linecolor":"#506784","ticks":""}},"title":{"x":0.05},"updatemenudefaults":{"bgcolor":"#506784","borderwidth":0},"xaxis":{"automargin":true,"gridcolor":"#283442","linecolor":"#506784","ticks":"","title":{"standoff":15},"zerolinecolor":"#283442","zerolinewidth":2},"yaxis":{"automargin":true,"gridcolor":"#283442","linecolor":"#506784","ticks":"","title":{"standoff":15},"zerolinecolor":"#283442","zerolinewidth":2}}},"map":{"center":{"lat":24.0,"lon":120.5},"style":"open-street-map","zoom":10},"margin":{"l":0,"r":0,"t":0,"b":0},"autosize":true,"showlegend":false,"shapes":[{"line":{"color":"#000000","width":2},"opacity":1,"type":"line","x0":0.02,"x1":0.12,"xref":"paper","y0":0.03,"y1":0.03,"yref":"paper"}],"annotations":[{"font":{"color":"#000000","family":"Consolas","size":12},"showarrow":false,"text":"Scale","x":0.02,"xanchor":"left","xref":"paper","y":0.045,"yref":"paper"}]},                        {"responsive": true}                    )                };            </script>        </div>
+            <div class="legend-bar">
+                <div class="legend-item"><div class="sym"><div class="sym-impact"></div></div><div class="legend-label">IMPACT ZONE</div></div>
+                <div class="legend-item"><div class="sym"><div class="sym-trace"></div></div><div class="legend-label">TRACES</div></div>
+                <div class="legend-item"><div class="sym"><div class="sym-origin"></div></div><div class="legend-label">ORIGIN</div></div>
+            </div>
+        </div>
+        <div class="bottom-panel">
+            <div class="play-section"><button id="playBtn" class="play-btn" onclick="togglePlay()">▶ START</button></div>
+            <div class="slider-section">
+                <div style="display: flex; justify-content: space-between;"><span class="label">TIMELINE SEQUENCE</span><span class="label" id="minLabel">0 MIN</span></div>
+                <input id="timeSlider" type="range" min="0" max="720" step="5" value="0" oninput="updateTime(this.value)">
+            </div>
+            <div class="time-box"><span>ELAPSED</span><div id="timeValue">T+000</div><span>MIN</span></div>
+        </div>
+    </div>
+<script>
+    let dataCache = {};
+    let currentTime = 0;
+    let timer = null;
+    let gd = document.querySelector('.plotly-graph-div');
+    const MAX_STEPS = 720;
+
+    // Convex Hull Algorithm (Monotone Chain)
+    function convexHull(points) {
+        points.sort((a, b) => a[0] == b[0] ? a[1] - b[1] : a[0] - b[0]);
+        const lower = [];
+        for (let p of points) {
+            while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+            lower.push(p);
+        }
+        const upper = [];
+        for (let i = points.length - 1; i >= 0; i--) {
+            const p = points[i];
+            while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+            upper.push(p);
+        }
+        upper.pop(); lower.pop();
+        return lower.concat(upper);
+    }
+    function cross(o, a, b) { return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); }
+
+    function updateTime(v) {
+        currentTime = parseInt(v);
+        document.getElementById('timeSlider').value = v;
+        document.getElementById('minLabel').innerText = v + " MIN";
+        document.getElementById('timeValue').innerText = "T+" + v.toString().padStart(3, '0');
+        const frame = dataCache[v] || dataCache["0"];
+        if(frame) Plotly.restyle(gd, { lon: [frame.h_lon, frame.lon], lat: [frame.h_lat, frame.lat] }, [0, 1]);
+    }
+
+    function togglePlay() {
+        const btn = document.getElementById('playBtn');
+        if(!timer) {
+            timer = setInterval(() => {
+                currentTime = (currentTime >= MAX_STEPS) ? 0 : currentTime + 5;
+                updateTime(currentTime);
+            }, 80);
+            btn.innerText = "⏸ STOP"; btn.classList.add('paused');
+        } else {
+            clearInterval(timer); timer = null;
+            btn.innerText = "▶ START"; btn.classList.remove('paused');
+        }
+    }
+    
+    window.addEventListener('resize', () => Plotly.Plots.resize(gd));
+    
+    function updateScale() {
+        try {
+            const mapLayout = gd._fullLayout.map;
+            if(!mapLayout || !mapLayout.zoom) return;
+            const zoom = mapLayout.zoom;
+            const lat = mapLayout.center.lat;
+            const width = gd._fullLayout.width;
+            const metersPerPx = 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom);
+            let targetMeters = metersPerPx * 100;
+            let unit = 'm';
+            if(targetMeters >= 1000) { targetMeters/=1000; unit='km'; }
+            const magnitude = Math.pow(10, Math.floor(Math.log10(targetMeters)));
+            let nice = 1;
+            const residual = targetMeters / magnitude;
+            if(residual >= 2) nice = 2;
+            if(residual >= 5) nice = 5;
+            if(residual >= 10) nice = 10;
+            const finalVal = nice * magnitude;
+            const finalMeters = finalVal * (unit==='km'?1000:1);
+            const finalPx = finalMeters / metersPerPx;
+            const paperFraction = finalPx / width;
+            Plotly.relayout(gd, { 'shapes[0].x1': 0.02 + paperFraction, 'annotations[0].text': finalVal + ' ' + unit });
+        } catch(e) { console.log("Scale Error:", e); }
+    }
+    function debounce(func, wait) {
+        let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); };
+    }
+    const debouncedUpdateScale = debounce(updateScale, 200);
+
+    window.onload = () => setTimeout(() => { Plotly.Plots.resize(gd); debouncedUpdateScale(); }, 1000);
+    gd.on('plotly_relayout', function(ed) { if(ed && (ed['shapes[0].x1'])) return; debouncedUpdateScale(); });
+    gd.on('plotly_restyle', debouncedUpdateScale);
+
+    // MESSAGE LISTENER
+    window.addEventListener('message', function(e) {
+        const payload = e.data;
+        if(payload.type === 'updateData') {
+            const rawData = payload.data;
+            const origin = payload.origin;
+            dataCache = {}; // Clear
+            const STEPS = rawData.length;
+            const LON = 10; const LAT = 9;
+            
+            for(let t=0; t<STEPS; t+=1) {
+                 let t_lons = []; let t_lats = [];
+                 for(let subT=0; subT<=t; subT++) {
+                     for(let m=0; m<rawData[0].length; m++) {
+                         let ln = rawData[subT][m][LON]; let lt = rawData[subT][m][LAT];
+                         if(!isNaN(ln) && !isNaN(lt)) { t_lons.push(ln); t_lats.push(lt); }
+                     }
+                 }
+                 let h_lon=[], h_lat=[];
+                 if(t_lons.length > 2) {
+                     const hull = convexHull(t_lons.map((v, i) => [v, t_lats[i]]));
+                     if(hull.length > 0) { hull.push(hull[0]); h_lon = hull.map(p => p[0]); h_lat = hull.map(p => p[1]); }
+                 }
+                 if(h_lon.length === 0) {
+                     let cl = origin[1], ct = origin[0];
+                     const d = 0.0001;
+                     h_lon = [cl, cl+d, cl-d, cl]; h_lat = [ct+d, ct-d, ct-d, ct+d];
+                 }
+                 let cur_lons = []; let cur_lats = [];
+                 for(let m=0; m<rawData[0].length; m++) {
+                     let ln = rawData[t][m][LON]; let lt = rawData[t][m][LAT];
+                     cur_lons.push(isNaN(ln) ? origin[1] : ln); cur_lats.push(isNaN(lt) ? origin[0] : lt);
+                 }
+                 dataCache[t] = { h_lon: h_lon, h_lat: h_lat, lon: cur_lons, lat: cur_lats };
+            }
+            updateTime(0);
+            Plotly.restyle(gd, {'lon': [[origin[1]]], 'lat': [[origin[0]]]}, [2]);
+            Plotly.relayout(gd, {'map.center': {lat: origin[0], lon: origin[1]}});
+        }
+    });
+</script></body></html>
